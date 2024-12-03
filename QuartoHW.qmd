@@ -1,0 +1,180 @@
+---
+title: "QuartoHW"
+subtitle: "Analysis of Tortilla Prices, learning how to use Quarto"
+author: "Patrick Erickson"
+date: "2024-11-20"
+format: html
+self-contained: true
+---
+
+## Question 1
+
+```{r,echo = FALSE}
+## dependencies
+library(ggplot2)
+
+myFunction <- function(x){
+  y <- (cos(4*x) + tan(0.5*x))^4
+  return(y)
+}
+
+ggplot() +
+  stat_function(
+    fun = myFunction,
+    xlim = c(0, 1),
+    n = 1000
+  ) +
+  theme_bw() +
+  labs(
+    x = "x",
+    y = "h(x)"
+  )
+```
+
+## Question 2
+
+```{r, echo = TRUE}
+library(ggplot2)
+library(dplyr)
+
+diamonds_prices <- diamonds %>%
+group_by(clarity) %>%
+summarise(
+count = n(),
+avg_price = mean(price)
+)
+
+#I ordered bars after researching the clarity grades
+p <- ggplot(diamonds_prices, aes(
+x = factor(clarity, levels = c("I1", "SI2", "SI1", "VS2", "VS1", "VVS2", "VVS1", "IF")),
+y = count,
+fill = avg_price
+)) +
+geom_bar(stat = "identity", color = "black", alpha = 0.8) +
+scale_fill_gradient(low = "blue", high = "red") +
+labs(
+title = "Number of Diamonds by Clarity",
+x = "Clarity",
+y = "Count",
+fill = "Average Price"
+) +
+theme_minimal()
+
+p
+```
+
+## Question 3 (footnote located below this line)
+
+all of the data was obtained from the tortillas dataset on kaggle[^1].
+
+[^1]: Rick Chavelas via Kaggle at <https://www.kaggle.com/datasets/richave/tortilla-prices-in-mexico>
+
+### a) The mean price of all tortillas in 2007 is:
+
+```{r}
+#reads in and summarizes and gives the mean of all tortillas in 2007 while saving the mean to a variable
+tortillas <- read.csv("C:/Users/patri/OneDrive/Documents/tortilla_data.csv")
+average_2007 <- tortillas %>%
+  filter(year == 2007) %>%
+  summarize(average_price = mean(price, na.rm = TRUE))
+
+average_2007
+```
+
+### b) The mean price for all tortillas in 2024 is:
+
+```{r}
+#summarizes and grabs mean of 2024 tortillas
+average_2024 <- tortillas %>%
+  filter(year == 2024) %>%
+  summarize(average_price = mean(price, na.rm = TRUE))
+
+average_2024
+
+```
+
+### c) The percentage change in price of tortillas from 2007 to 2024 is
+
+```{r}
+cat((average_2024$average_price/average_2007$average_price)*100, "%")
+
+```
+
+### d) Average prices for all 6 states over the years
+
+```{r}
+
+# Summarize average price by year and state
+average_per_state <- tortillas %>%
+  group_by(year, state) %>%
+  summarize(average_price = mean(price, na.rm = TRUE), .groups = "drop")
+
+# Create the multi-line ggplot
+q <- ggplot(average_per_state, aes(x = year, y = average_price, color = state, group = state)) +
+  geom_line(size = 1) +  
+  geom_point(size = 2) +  
+  labs(
+    title = "Average Price of Tortillas by State and Year",
+    x = "Year",
+    y = "Average Price",
+    color = "State"  
+  ) +
+  theme_minimal()
+
+q
+```
+
+### e) Summary Statistics of Tortilla Prices by State in 2016
+
+The table below shows the summary statistics (mean, median, min, max, and standard deviation) of tortilla prices in 2016 for each state.
+
+```{r}
+
+# Filter data for 2016 and summarize statistics by state
+summary2016 <- tortillas %>%
+  filter(year == 2016) %>%
+  group_by(state) %>%
+  summarize(
+    average_price = mean(price, na.rm = TRUE),
+    median_price = median(price, na.rm = TRUE),
+    min_price = min(price, na.rm = TRUE),
+    max_price = max(price, na.rm = TRUE),
+    sd_price = sd(price, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+summary2016
+```
+
+### f) Average price of a tortilla in Nuevo León by Store Type
+
+The plot shows trends in average tortilla prices for small businesses and large corporations in Nuevo León over the years.
+
+```{r}
+
+
+# Filter data for Nuevo León from 2007 to 2024
+nuevo_data <- tortillas %>%
+  filter(state == "NuevoLeon") %>%
+  group_by(year, storeType) %>%
+  summarize(average_price = mean(price, na.rm = TRUE), .groups = "drop")
+
+# Create the overlapping plot
+s <- ggplot(nuevo_data, aes(x = year, y = average_price, color = storeType, group = storeType)) +
+  geom_line(size = 1) +  
+  geom_point(size = 2) + 
+  labs(
+    title = "Average Price of Tortillas in Nuevo León by Store Type",
+    x = "Year",
+    y = "Average Price",
+    color = "Store Type",  # Legend title
+  ) +
+  theme_minimal()
+
+s
+```
+
+### g) Tortilla Picture
+
+This is a tortilla.![This is a tortilla](https://static01.nyt.com/images/2024/08/06/multimedia/11EATrex-flour-tortillas-mvfk/11EATrex-flour-tortillas-mvfk-googleFourByThree.jpg) *Source: [https://cooking.nytimes.com/recipes/1025834-flour-tortillas-with-honey-and-butter]()*
+
